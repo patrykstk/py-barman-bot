@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-import random
 from utils import log
 import asyncio
 
@@ -22,9 +21,8 @@ class Troll(commands.Cog):
             self,
             interaction: discord.Interaction,
             member: discord.Member,
-            # Nowe argumenty dla kanałów
-            channel_a: app_commands.Channel[discord.VoiceChannel],  # Używamy Channel z typem VoiceChannel
-            channel_b: app_commands.Channel[discord.VoiceChannel],  # Używamy Channel z typem VoiceChannel
+            channel_a: discord.VoiceChannel,
+            channel_b: discord.VoiceChannel,
             times: app_commands.Range[int, 1, 10] = 5,
             delay: app_commands.Range[float, 0.5, 5.0] = 1.0
     ):
@@ -36,7 +34,6 @@ class Troll(commands.Cog):
             await interaction.response.send_message("Ta komenda może być używana tylko na serwerze.", ephemeral=True)
             return
 
-        # Sprawdzenie, czy wybrane kanały są kanałami głosowymi (dekorator Channel już to częściowo filtruje, ale warto upewnić się)
         if not isinstance(channel_a, discord.VoiceChannel) or not isinstance(channel_b, discord.VoiceChannel):
             await interaction.response.send_message(
                 "Musisz wybrać dwa kanały głosowe.", ephemeral=True
@@ -52,12 +49,12 @@ class Troll(commands.Cog):
             await interaction.response.send_message("Musisz wybrać dwa różne kanały głosowe!", ephemeral=True)
             return
 
-        await interaction.response.defer(ephemeral=False)  # Odłóż odpowiedź, bo to może trochę potrwać
+        await interaction.response.defer(ephemeral=False)
 
         initial_channel = member.voice.channel
         log('INFO', f"Startowy kanał {member.display_name}: {initial_channel.name} (ID: {initial_channel.id})")
 
-        current_channel = initial_channel  # Zacznij od kanału, w którym jest użytkownik
+        current_channel = initial_channel
 
         try:
             for i in range(times):

@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 from utils import log
+from db import Database
 
 load_dotenv()
 
@@ -16,9 +17,27 @@ class DiscordBot:
         intents = discord.Intents.default()
         intents.members = True
         intents.message_content = True
+        intents.voice_states = True
 
         self.bot = commands.Bot(command_prefix='!', intents=intents)
         log("INITIALIZATION", 'Starting discord bot..')
+
+        try:
+            self.db = Database()
+            log("INITIALIZATION", 'Database initialized successfully.')
+        except ConnectionError as e:
+            log("ERROR", f"Failed to initialize database: {e}")
+            self.db = None
+            log("ERROR", "Database connection failed. Bot might not function correctly for DB-dependent features.")
+        except FileNotFoundError as e:
+            log("ERROR", f"Database schema file not found: {e}")
+            self.db = None
+            log("ERROR", "Database setup failed due to missing schema file. Bot might not function correctly.")
+        except RuntimeError as e:
+            log("ERROR", f"Error during database schema setup: {e}")
+            self.db = None
+            log("ERROR", "Database setup failed. Bot might not function correctly.")
+
 
         @self.bot.event
         async def on_ready():
@@ -33,6 +52,13 @@ class DiscordBot:
 
             log("INITIALIZATION", f'Commands found: /{", /".join(COMMANDS_LIST)}')
 
+        @self.bot.event
+        async def on_disconnect():
+            if self.db:
+                self.db.close()
+                log("INITIALIZATION", "Database connection closed on bot disconnect.")
+
+
     async def load_cogs(self):
         log("INITIALIZATION", 'Trying to load cogs..')
         for cog_module in COGS:
@@ -42,12 +68,12 @@ class DiscordBot:
             except commands.ExtensionAlreadyLoaded:
                 log("WARNING", f'Cog {cog_module} was already loaded!')
             except commands.ExtensionNotFound:
-                log("ERROR", f'Couldnt find cog {cog_module}!')
+                log("ERROR", f'Couldn\'t find cog {cog_module}!')
             except commands.NoEntryPointError:
                 log("ERROR", f'Cog {cog_module} has no setup function!')
             except Exception as e:
                 import traceback
-                log("ERROR", f'Couldnt load cog {cog_module}. Error: {e}!')
+                log("ERROR", f'Couldn\'t load cog {cog_module}. Error: {e}!')
                 traceback.print_exc()
 
     async def sync_commands(self):
@@ -63,7 +89,7 @@ class DiscordBot:
 
         except Exception as e:
             import traceback
-            log("ERROR", f'Couldnt synchronize commands with error {e}.')
+            log("ERROR", f'Couldn\'t synchronize commands with error {e}.')
             traceback.print_exc()
 
     def run_bot(self):
@@ -75,4 +101,4 @@ class DiscordBot:
         except discord.LoginFailure:
             log("ERROR", 'Wrong discord token.')
         except Exception as e:
-            log("ERROR", 'An error occured: {e}')
+            log("ERROR", f'An error occurred: {e}')

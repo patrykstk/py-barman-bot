@@ -1,0 +1,55 @@
+CREATE TABLE IF NOT EXISTS roles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL,
+    role_id INTEGER,
+    discord_user_id INTEGER UNIQUE,
+    FOREIGN KEY (role_id) REFERENCES roles(id)
+);
+
+CREATE TABLE IF NOT EXISTS user_notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    note TEXT,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS aces (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    done_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    submitted_by INTEGER NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (submitted_by) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS ignored_users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    function_id INTEGER NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (function_id) REFERENCES functions(id)
+);
+
+CREATE TABLE IF NOT EXISTS functions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS crosshairs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    "name" TEXT NOT NULL,
+    code TEXT NOT NULL,
+    submitted_by INTEGER,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (submitted_by) REFERENCES users(id)
+);
+
+INSERT OR IGNORE INTO roles (name) VALUES ('admin');
+INSERT OR IGNORE INTO roles (name) VALUES ('moderator');
+INSERT OR IGNORE INTO roles (name) VALUES ('user');

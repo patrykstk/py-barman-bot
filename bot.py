@@ -5,7 +5,7 @@ from utils import log
 
 load_dotenv()
 
-COGS = ['valorant', 'troll']
+COGS = ['interaction', 'valorant', 'troll']
 
 class DiscordBot:
     def __init__(self, discord_token, guild_id=None):
